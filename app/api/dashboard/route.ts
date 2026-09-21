@@ -400,6 +400,101 @@ export async function GET(request: Request) {
       }
     }).reverse()
     
+    // Build monthly agents data
+    const monthlyAgentsData: { [key: string]: any } = {}
+    availableMonths.forEach((month) => {
+      const monthData = renamedDf.filter((row: any) => row['Month Start'] === month.date)
+      monthlyAgentsData[month.date] = monthData.map((row: any) => ({
+        name: row['Employee Name'],
+        salary: row['Salary'] || 0,
+        team: row['Team'] || 'N/A',
+        target: row['Target'] || 0,
+        justification: row['Justification'] || 0,
+        fiftyBelowAbove: row['50 Below Above'] || 0,
+        fiftykAbove: row['50k Above'] || 0,
+        oneLacAbove: row['1lac Above'] || 0,
+        singleYrCount: row['Single Yr Nop'] || 0,
+        multiYrCount: row['Multi Yr Nop'] || 0,
+        nop: row['N.o.p'] || 0,
+        grossScore: row['Gross score'] || 0,
+        score: row['Score'] || 0,
+        justLeft: row['Just left'] || 0,
+        percent: row['Target'] > 0 ? (row['Score'] / row['Target']) * 100 : 0,
+        discountDelivered: row['Discount Deliverd'] || 0,
+        discountCount: row['Discount Count'] || 0,
+        lastPaymentDate: row['Last Payment'] || 'N/A',
+        lastPaymentAmount: row['Last Payment Amount'] || 0,
+        paymentAging: row['Last Pay Days'] || 0
+      }))
+    })
+    
+    // Build monthly team data
+    const monthlyTeamData: { [key: string]: any } = {}
+    availableMonths.forEach((month) => {
+      const monthData = renamedDf.filter((row: any) => row['Month Start'] === month.date)
+      const teamMap = new Map<string, any>()
+      
+      monthData.forEach((row: any) => {
+        const team = row['Team'] || 'Unknown'
+        if (!teamMap.has(team)) {
+          teamMap.set(team, {
+            name: team,
+            target: 0,
+            score: 0,
+            nop: 0,
+            salary: 0,
+            justification: 0,
+            justLeft: 0,
+            gross: 0,
+            fiftyBelow: 0,
+            fiftykAbove: 0,
+            oneLacAbove: 0,
+            singleYrNop: 0,
+            multiYrNop: 0,
+            discountDelivered: 0,
+            discountCount: 0,
+            payAmt: 0,
+            agents: 0,
+            zeroScoreAgents: 0,
+            targetCompletedAgents: 0,
+            justificationClearedAgents: 0,
+            paymentDates: []
+          })
+        }
+        
+        const teamData = teamMap.get(team)
+        teamData.target += row['Target'] || 0
+        teamData.score += row['Score'] || 0
+        teamData.nop += row['N.o.p'] || 0
+        teamData.salary += row['Salary'] || 0
+        teamData.justification += row['Justification'] || 0
+        teamData.justLeft += row['Just left'] || 0
+        teamData.gross += row['Gross score'] || 0
+        teamData.fiftyBelow += row['50 Below Above'] || 0
+        teamData.fiftykAbove += row['50k Above'] || 0
+        teamData.oneLacAbove += row['1lac Above'] || 0
+        teamData.singleYrNop += row['Single Yr Nop'] || 0
+        teamData.multiYrNop += row['Multi Yr Nop'] || 0
+        teamData.discountDelivered += row['Discount Deliverd'] || 0
+        teamData.discountCount += row['Discount Count'] || 0
+        teamData.payAmt += row['Last Payment Amount'] || 0
+        teamData.agents += 1
+        if (row['Score'] === 0) teamData.zeroScoreAgents += 1
+        if (row['Score'] >= row['Target'] && row['Target'] > 0) teamData.targetCompletedAgents += 1
+        if (row['Score'] >= row['Justification'] && row['Justification'] > 0) teamData.justificationClearedAgents += 1
+        if (row['Last Payment']) teamData.paymentDates.push(row['Last Payment'])
+      })
+      
+      monthlyTeamData[month.date] = Array.from(teamMap.values())
+        .map((team: any) => ({
+          ...team,
+          percent: team.target > 0 ? (team.score / team.target) * 100 : 0,
+          payDate: team.paymentDates.length > 0 ? new Date(Math.max(...team.paymentDates.map((d: any) => new Date(d).getTime()))).toISOString().split('T')[0] : 'N/A',
+          days: team.paymentDates.length > 0 ? Math.floor((Date.now() - new Date(Math.max(...team.paymentDates.map((d: any) => new Date(d).getTime()))).getTime()) / (1000 * 60 * 60 * 24)) : 0
+        }))
+        .sort((a, b) => b.percent - a.percent)
+    })
+    
     return NextResponse.json({
       currentMonth: availableMonths[0]?.name || 'Unknown',
       availableMonths,
@@ -431,8 +526,8 @@ export async function GET(request: Request) {
       },
       topAgents,
       allAgents: allAgentsRecords,
-      monthlyAgentsData: {},
-      monthlyTeamData: {},
+      monthlyAgentsData,
+      monthlyTeamData,
       monthlyCompanyData,
       teamLeaders,
       lastMonth: {
