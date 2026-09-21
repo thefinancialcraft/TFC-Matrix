@@ -28,7 +28,7 @@ export default function Sidebar() {
       {/* Brand Header */}
       <div className="px-5 pt-10 pb-3">
         <h1 className="font-poppins text-[20px] font-[500] text-white/60 tracking-tight text-left">
-          TFC Axom Lite
+          TFC Matrix
         </h1>
       </div>
 
