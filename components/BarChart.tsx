@@ -11,6 +11,7 @@ export default function BarChart({ data }: { data: any[] }) {
           margin={{ top: 5, right: 30, left: -20, bottom: 5 }}
           barSize={12}
         >
+          
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F242F" />
           <XAxis 
             dataKey="name" 
