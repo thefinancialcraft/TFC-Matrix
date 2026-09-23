@@ -70,6 +70,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const month = searchParams.get('month')
+    const requestedMonth = month?.trim() || ''
     
     console.log('Fetching raw data from Supabase...')
     const { data: rawData, error } = await supabase
@@ -203,8 +204,12 @@ export async function GET(request: Request) {
       }
     })
     
+    const selectedMonthIndex = requestedMonth
+      ? Math.max(0, availableMonths.findIndex((monthOption: any) => monthOption.date === requestedMonth))
+      : 0
+
     // Get current month data
-    const currentMonthDate = availableMonths[0]?.date
+    const currentMonthDate = availableMonths[selectedMonthIndex]?.date || availableMonths[0]?.date
     const currentMonthData = renamedDf.filter((row: any) => row['Month Start'] === currentMonthDate)
     
     // Calculate KPIs for current month
@@ -347,8 +352,8 @@ export async function GET(request: Request) {
       .sort((a, b) => b.percent - a.percent)
       .slice(0, 5)
     
-    // Last month data
-    const lastMonthDate = availableMonths[1]?.date
+    // Last month data relative to selected month
+    const lastMonthDate = availableMonths[selectedMonthIndex + 1]?.date || availableMonths[selectedMonthIndex]?.date
     const lastMonthData = renamedDf.filter((row: any) => row['Month Start'] === lastMonthDate)
     
     const lastMonthScore = lastMonthData.reduce((sum: number, row: any) => sum + (row['Score'] || 0), 0)
@@ -496,9 +501,9 @@ export async function GET(request: Request) {
     })
     
     return NextResponse.json({
-      currentMonth: availableMonths[0]?.name || 'Unknown',
+      currentMonth: currentMonthDate ? new Date(currentMonthDate).toLocaleString('en-US', { month: 'short', year: '2-digit' }) : (availableMonths[0]?.name || 'Unknown'),
       availableMonths,
-      selectedMonthIndex: 0,
+      selectedMonthIndex,
       paymentInfo,
       recentPayments,
       trendData,
