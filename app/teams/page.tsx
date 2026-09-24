@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, useRef } from 'react'
+import Link from 'next/link'
 import { Users, Target, TrendingUp, AlertCircle, Trophy, Calendar, User, Settings } from 'lucide-react'
 
 const formatDate = (dateString: string) => {
@@ -27,6 +28,7 @@ export default function TeamsPage() {
   const [monthlyTeamData, setMonthlyTeamData] = useState<any>({})
   const [showMonthDropdown, setShowMonthDropdown] = useState(false)
   const [showParameterDropdown, setShowParameterDropdown] = useState(false)
+  const [recordMonth, setRecordMonth] = useState<string>('')
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
   
@@ -79,7 +81,7 @@ export default function TeamsPage() {
     const fetchTeamLeaders = async () => {
       try {
         console.log('Fetching team leaders data...')
-        const response = await fetch('/api/dashboard')
+        const response = await fetch(recordMonth ? `/api/dashboard?month=${encodeURIComponent(recordMonth)}` : '/api/dashboard')
         console.log('Response status:', response.status)
         
         if (!response.ok) {
@@ -115,6 +117,9 @@ export default function TeamsPage() {
               index === self.findIndex((m: any) => m.date === month.date)
             )
           setAvailableMonths(uniqueMonths)
+          if (!recordMonth && uniqueMonths.length > 0) {
+            setRecordMonth(uniqueMonths[0].date)
+          }
           if (uniqueMonths.length > 0) {
             // Select 6 months by default (6M)
             const monthsToSelect = Math.min(6, uniqueMonths.length)
@@ -136,7 +141,7 @@ export default function TeamsPage() {
     }
 
     fetchTeamLeaders()
-  }, [])
+  }, [recordMonth])
 
   const exportToCSV = () => {
     if (viewMode === 'matrix') {
@@ -281,6 +286,21 @@ export default function TeamsPage() {
           <h1 className="text-[28px] font-bold text-white tracking-tight leading-none mb-2">Teams Dashboard</h1>
           <p className="text-sm text-[#8B949E]">Manage and view team leader performance</p>
         </div>
+        <label className="flex items-center gap-2 text-xs font-poppins text-[#94A3B8]">
+          <Calendar size={14} className="text-cyan-400" />
+          <span>Month</span>
+          <select
+            value={recordMonth}
+            onChange={(event) => setRecordMonth(event.target.value)}
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none"
+          >
+            {availableMonths.map((month) => (
+              <option key={month.date} value={month.date} className="bg-[#0A0E17] text-white">
+                {month.name}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {/* KPI Cards Section */}
@@ -714,7 +734,12 @@ export default function TeamsPage() {
                         </div>
                       </td>
                       <td className="py-3.5 pr-4 text-center">
-                        <span className="font-poppins text-[13px] text-white block">{team.name}</span>
+                        <Link
+                          href={`/teams/performance?team=${encodeURIComponent(team.name)}`}
+                          className="font-poppins text-[13px] text-cyan-300 hover:text-cyan-200 hover:underline block"
+                        >
+                          {team.name}
+                        </Link>
                       </td>
                       <td className="py-3.5 pr-4 text-center">
                         <span className="font-roboto text-[13px] text-white/80">{team.nop || 0}</span>

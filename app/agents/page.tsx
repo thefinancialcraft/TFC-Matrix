@@ -27,6 +27,8 @@ export default function AgentsPage() {
   const [monthlyAgentsData, setMonthlyAgentsData] = useState<any>({})
   const [showMonthDropdown, setShowMonthDropdown] = useState(false)
   const [showParameterDropdown, setShowParameterDropdown] = useState(false)
+  const [recordMonth, setRecordMonth] = useState<string>('')
+  const [selectedTeamLeader, setSelectedTeamLeader] = useState<string>('')
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
   
@@ -68,18 +70,23 @@ export default function AgentsPage() {
 
   // Filter agents based on search query
   const filteredAgentsList = useMemo(() => {
-    if (!searchQuery.trim()) return agentsList
-    const query = searchQuery.toLowerCase()
-    return agentsList.filter(agent => 
-      agent.name && agent.name.toLowerCase().includes(query)
-    )
-  }, [agentsList, searchQuery])
+    const query = searchQuery.trim().toLowerCase()
+    return agentsList.filter(agent => {
+      const matchesSearch = !query || (agent.name && agent.name.toLowerCase().includes(query))
+      const matchesTeamLeader = !selectedTeamLeader || agent.team === selectedTeamLeader
+      return matchesSearch && matchesTeamLeader
+    })
+  }, [agentsList, searchQuery, selectedTeamLeader])
+
+  const availableTeamLeaders = useMemo(() => {
+    return Array.from(new Set(agentsList.map(agent => agent.team).filter(Boolean))).sort()
+  }, [agentsList])
 
   useEffect(() => {
     const fetchAgents = async () => {
       try {
         console.log('Fetching agents data...')
-        const response = await fetch('/api/dashboard')
+        const response = await fetch(recordMonth ? `/api/dashboard?month=${encodeURIComponent(recordMonth)}` : '/api/dashboard')
         console.log('Response status:', response.status)
         
         if (!response.ok) {
@@ -115,6 +122,9 @@ export default function AgentsPage() {
               index === self.findIndex((m: any) => m.date === month.date)
             )
           setAvailableMonths(uniqueMonths)
+          if (!recordMonth && uniqueMonths.length > 0) {
+            setRecordMonth(uniqueMonths[0].date)
+          }
           if (uniqueMonths.length > 0) {
             // Select 6 months by default (6M)
             const monthsToSelect = Math.min(6, uniqueMonths.length)
@@ -134,7 +144,7 @@ export default function AgentsPage() {
     }
 
     fetchAgents()
-  }, [])
+  }, [recordMonth])
 
   const exportToCSV = () => {
     if (viewMode === 'matrix') {
@@ -273,6 +283,21 @@ export default function AgentsPage() {
           <h1 className="text-[28px] font-bold text-white tracking-tight leading-none mb-2">Agents Dashboard</h1>
           <p className="text-sm text-[#8B949E]">Manage and view individual agent performance</p>
         </div>
+        <label className="flex items-center gap-2 text-xs font-poppins text-[#94A3B8]">
+          <Calendar size={14} className="text-cyan-400" />
+          <span>Month</span>
+          <select
+            value={recordMonth}
+            onChange={(event) => setRecordMonth(event.target.value)}
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none"
+          >
+            {availableMonths.map((month) => (
+              <option key={month.date} value={month.date} className="bg-[#0A0E17] text-white">
+                {month.name}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {/* KPI Cards Section */}
@@ -583,6 +608,24 @@ export default function AgentsPage() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Team Leader Dropdown */}
+                    <div className="relative">
+                      <label className="block font-poppins font-medium text-[12px] text-gray-700 mb-1 flex items-center gap-1.5">
+                        <Users size={12} className="text-gray-500" />
+                        Team Leader
+                      </label>
+                      <select
+                        value={selectedTeamLeader}
+                        onChange={(event) => setSelectedTeamLeader(event.target.value)}
+                        className="w-full px-4 py-2 rounded-full bg-gradient-to-r from-gray-50 to-gray-100 border-2 border-gray-200 text-gray-700 text-[11px] font-poppins font-medium outline-none"
+                      >
+                        <option value="">All Team Leaders</option>
+                        {availableTeamLeaders.map((teamLeader) => (
+                          <option key={teamLeader} value={teamLeader}>{teamLeader}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   {/* Footer */}
@@ -591,6 +634,7 @@ export default function AgentsPage() {
                       onClick={() => {
                         setSelectedMonth([])
                         setSelectedParameter([])
+                        setSelectedTeamLeader('')
                         setSelectedTimeRange('')
                       }}
                       className="flex-1 px-2.5 py-2 rounded-lg text-[11px] font-poppins font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
