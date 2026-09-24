@@ -7,6 +7,7 @@ import {
   Target,
   UserPlus,
   FileText, 
+  CreditCard,
   Settings, 
   LogOut
 } from "lucide-react"
@@ -20,6 +21,7 @@ export default function Sidebar() {
     { label: "Dashboard", href: "/", icon: <LayoutDashboard size={18} /> },
     { label: "Agents", href: "/agents", icon: <Users size={18} /> },
     { label: "Teams", href: "/teams", icon: <Users size={18} /> },
+    { label: "Payment Grid", href: "/payment-grid", icon: <CreditCard size={18} /> },
     { label: "Monthly Overview", href: "/monthly-overview", icon: <CalendarDays size={18} /> }
   ]
 

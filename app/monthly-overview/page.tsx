@@ -168,8 +168,7 @@ export default function MonthlyOverviewPage() {
     <div className="p-8 pb-10 max-w-7xl mx-auto">
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h1 className="text-[28px] font-bold text-white tracking-tight leading-none mb-2">Monthly Overview</h1>
-          <p className="text-sm text-[#8B949E]">Company performance aggregated by month</p>
+          <h1 className="silver-shimmer-text font-poppins text-[28px] font-normal tracking-normal leading-none mb-2">Monthly Overview</h1>
         </div>
         <button
           onClick={exportToCSV}

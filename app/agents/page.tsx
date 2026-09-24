@@ -280,8 +280,7 @@ export default function AgentsPage() {
     <div className="p-8 pb-10 max-w-7xl mx-auto">
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h1 className="text-[28px] font-bold text-white tracking-tight leading-none mb-2">Agents Dashboard</h1>
-          <p className="text-sm text-[#8B949E]">Manage and view individual agent performance</p>
+          <h1 className="silver-shimmer-text font-poppins text-[28px] font-normal tracking-normal leading-none mb-2">Agents Dashboard</h1>
         </div>
         <label className="flex items-center gap-2 text-xs font-poppins text-[#94A3B8]">
           <Calendar size={14} className="text-cyan-400" />

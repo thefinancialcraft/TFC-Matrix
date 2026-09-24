@@ -82,10 +82,9 @@ export default function TeamPerformancePage() {
           <Link href="/teams" className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 mb-4">
             <ArrowLeft size={14} /> Back to Teams
           </Link>
-          <h1 className="text-[28px] font-bold text-white tracking-tight leading-none mb-2">
+          <h1 className="silver-shimmer-text font-poppins text-[28px] font-normal tracking-normal leading-none mb-2">
             {teamName || 'Team'} Performance
           </h1>
-          <p className="text-sm text-[#8B949E]">Performance records for agents in this team</p>
         </div>
         <label className="flex items-center gap-2 text-xs font-poppins text-[#94A3B8]">
           <Calendar size={14} className="text-cyan-400" />

@@ -3,8 +3,7 @@ export default function ReportsPage() {
     <div className="p-8 pb-10 max-w-7xl mx-auto">
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h1 className="text-[28px] font-bold text-white tracking-tight leading-none mb-2">Reports Builder</h1>
-          <p className="text-sm text-[#8B949E]">Generate and view custom reports</p>
+          <h1 className="silver-shimmer-text font-poppins text-[28px] font-normal tracking-normal leading-none mb-2">Reports Builder</h1>
         </div>
       </div>
       <div className="bg-card border border-borderDark rounded-xl p-8 flex items-center justify-center text-[#8B949E]">
