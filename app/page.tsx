@@ -612,6 +612,7 @@ export default function Dashboard() {
     const updateHeader = () => {
       const scrollPos = mainEl ? mainEl.scrollTop : window.scrollY
       const progress = Math.min(1, Math.max(0, scrollPos / 80))
+      const isMobile = window.innerWidth < 640
 
       if (headerRef.current) {
         headerRef.current.style.backgroundColor = `rgba(8, 11, 17, ${(progress * 0.85).toFixed(3)})`
@@ -624,14 +625,14 @@ export default function Dashboard() {
       }
 
       if (headerInnerRef.current) {
-        const pt = 42 - progress * 29 // 42px down to 13px
-        const pb = 10 + progress * 3  // 10px up to 13px
+        const pt = isMobile ? 12 - progress * 4 : 42 - progress * 29
+        const pb = isMobile ? 7 + progress * 2 : 10 + progress * 3
         headerInnerRef.current.style.paddingTop = `${pt.toFixed(1)}px`
         headerInnerRef.current.style.paddingBottom = `${pb.toFixed(1)}px`
       }
 
       if (headerTitleRef.current) {
-        const fontSize = 28 - progress * 8 // 28px down to 20px
+        const fontSize = isMobile ? 21 - progress * 2 : 28 - progress * 8
         headerTitleRef.current.style.fontSize = `${fontSize.toFixed(1)}px`
       }
     }
@@ -1141,7 +1142,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-w-[1040px] relative">
+    <div className="w-full min-w-0 relative">
       {/* ============ STICKY TOP HEADER (CONTINUOUS PROGRESSIVE ADJUSTMENT) ============ */}
       <header 
         ref={headerRef}
@@ -1155,18 +1156,18 @@ export default function Dashboard() {
       >
         <div 
           ref={headerInnerRef}
-          className="max-w-[1580px] mx-auto px-7 lg:px-9 flex items-center justify-between header-transition will-change-[padding]"
+          className="max-w-[1580px] mx-auto px-3 sm:px-7 lg:px-9 flex items-center justify-between gap-2 sm:gap-3 header-transition will-change-[padding]"
           style={{
-            paddingTop: '42px',
-            paddingBottom: '10px',
+            paddingTop: '12px',
+            paddingBottom: '7px',
           }}
         >
           <div>
             <h1 
               ref={headerTitleRef}
-              className="font-poppins tracking-normal leading-none flex items-center gap-2 origin-left header-title-transition will-change-[font-size]"
+              className="font-poppins tracking-normal leading-none flex items-center gap-1.5 sm:gap-2 origin-left header-title-transition will-change-[font-size]"
               style={{
-                fontSize: '28px',
+                fontSize: '21px',
               }}
             >
               <span className="silver-shimmer-text font-normal">Welcome Back,</span>
@@ -1180,7 +1181,7 @@ export default function Dashboard() {
             <button 
               onClick={handlePrevMonth}
               disabled={!data.availableMonths || data.selectedMonthIndex >= data.availableMonths.length - 1}
-              className="btn-tactile w-9 h-9 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] flex items-center justify-center text-[#94A3B8] hover:text-white hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-20 disabled:hover:text-[#94A3B8] disabled:pointer-events-none transition-all duration-200"
+              className="btn-tactile w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] flex items-center justify-center text-[#94A3B8] hover:text-white hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-20 disabled:hover:text-[#94A3B8] disabled:pointer-events-none transition-all duration-200"
               title="Previous Month"
             >
               <ChevronLeft size={16} className="icon-tactile" />
@@ -1191,13 +1192,13 @@ export default function Dashboard() {
               {/* Month Button (Transparent BG & Border with Simultaneous Slide & Scale Transition) */}
               <button
                 onClick={() => setMonthDropdownOpen(!monthDropdownOpen)}
-                className="group relative flex items-center justify-center h-9 px-1 w-[88px] overflow-hidden bg-transparent border border-transparent hover:text-[#2DD4BF] active:scale-95 transition-all duration-150"
+                className="group relative flex items-center justify-center h-8 sm:h-9 px-1 w-[76px] sm:w-[88px] overflow-hidden bg-transparent border border-transparent hover:text-[#2DD4BF] active:scale-95 transition-all duration-150"
               >
                 {transitionState ? (
                   <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
                     {/* Outgoing Month: Fades out and scales down */}
                     <span 
-                      className={`absolute font-poppins text-[15px] font-regular text-white text-center whitespace-nowrap tracking-wide ${
+                        className={`absolute font-poppins text-[13px] sm:text-[15px] font-regular text-white text-center whitespace-nowrap tracking-wide ${
                         transitionState.direction === 'backward' 
                           ? 'animate-month-exit-backward' 
                           : 'animate-month-exit-forward'
@@ -1207,7 +1208,7 @@ export default function Dashboard() {
                     </span>
                     {/* Incoming Month: Slides from right to left, scales up and fades in simultaneously */}
                     <span 
-                      className={`absolute font-poppins text-[15px] font-regular text-white text-center whitespace-nowrap tracking-wide ${
+                        className={`absolute font-poppins text-[13px] sm:text-[15px] font-regular text-white text-center whitespace-nowrap tracking-wide ${
                         transitionState.direction === 'backward' 
                           ? 'animate-month-enter-backward' 
                           : 'animate-month-enter-forward'
@@ -1217,7 +1218,7 @@ export default function Dashboard() {
                     </span>
                   </div>
                 ) : (
-                  <span className="font-poppins text-[15px] font-regular text-white text-center whitespace-nowrap tracking-wide">
+                  <span className="font-poppins text-[13px] sm:text-[15px] font-regular text-white text-center whitespace-nowrap tracking-wide">
                     {activeMonthDisplay}
                   </span>
                 )}
@@ -1252,7 +1253,7 @@ export default function Dashboard() {
 
             {/* Circular Next Month Button - Smooth Transition to Hide on Current Month */}
             <div 
-              className={`overflow-hidden transition-all duration-500 ease-in-out flex items-center justify-center ${
+                className={`overflow-hidden transition-all duration-500 ease-in-out flex items-center justify-center ${
                 isCurrentMonth 
                   ? 'w-0 max-w-0 opacity-0 scale-75 -ml-2 pointer-events-none' 
                   : 'w-9 max-w-[36px] opacity-100 scale-100 ml-0 pointer-events-auto'
@@ -1261,7 +1262,7 @@ export default function Dashboard() {
               <button 
                 onClick={handleNextMonth}
                 tabIndex={isCurrentMonth ? -1 : 0}
-                className="btn-tactile w-9 h-9 shrink-0 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] flex items-center justify-center text-[#94A3B8] hover:text-white hover:bg-white/[0.08] hover:border-white/20 transition-all duration-200"
+                className="btn-tactile w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] flex items-center justify-center text-[#94A3B8] hover:text-white hover:bg-white/[0.08] hover:border-white/20 transition-all duration-200"
                 title="Next Month"
               >
                 <ChevronRight size={16} className="icon-tactile" />
@@ -1272,7 +1273,7 @@ export default function Dashboard() {
       </header>
 
       {/* ============ MAIN DASHBOARD CONTENT ============ */}
-      <div className="relative px-7 lg:px-9 pb-7 lg:pb-9 pt-2 space-y-6 max-w-[1580px] mx-auto bg-transparent">
+      <div className="relative px-4 sm:px-7 lg:px-9 pb-7 lg:pb-9 pt-2 space-y-6 max-w-[1580px] mx-auto bg-transparent">
 
       {/* SVG linear gradients for vibrant radiant KPI icons */}
       <svg className="w-0 h-0 absolute pointer-events-none" aria-hidden="true">

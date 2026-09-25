@@ -141,11 +141,11 @@ export default function PaymentGridPage() {
   }, [rows, searchQuery, teamFilter, agentFilter])
 
   return (
-    <div className="p-8 pb-10 max-w-[1800px] mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 pb-8 max-w-[1800px] mx-auto">
       <div className="flex flex-wrap items-end justify-between gap-4 mb-7">
         <div>
           <div className="flex items-center gap-2 mb-2">
-                <h1 className="silver-shimmer-text font-poppins text-[28px] font-normal tracking-normal leading-none">Payment Grid</h1>
+                <h1 className="silver-shimmer-text font-poppins text-[24px] sm:text-[28px] font-normal tracking-normal leading-none">Payment Grid</h1>
           </div>
         </div>
         <div className="flex flex-wrap items-end gap-3">

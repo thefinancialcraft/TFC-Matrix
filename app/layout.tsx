@@ -14,11 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="flex h-screen bg-[#080B11] overflow-hidden font-roboto text-[#F1F5F9] antialiased selection:bg-[#14B8A6]/25 selection:text-[#14B8A6]">
+      <body className="flex h-screen flex-col md:flex-row bg-[#080B11] overflow-hidden font-roboto text-[#F1F5F9] antialiased selection:bg-[#14B8A6]/25 selection:text-[#14B8A6]">
         <Sidebar />
-        <main className="flex-1 h-full overflow-y-auto overflow-x-hidden relative bg-[#080B11]">
+        <main className="flex-1 min-h-0 h-full pb-[68px] md:pb-0 overflow-y-auto overflow-x-hidden relative bg-[#080B11]">
           {/* Select Organic Ambient Glowing Blobs (Deep dark canvas with isolated spots) */}
-          <div className="fixed inset-0 left-[245px] pointer-events-none overflow-hidden select-none -z-0">
+          <div className="fixed inset-0 md:left-[245px] pointer-events-none overflow-hidden select-none -z-0">
             {/* Blob 1: Top-Left Violet Glow near First Card */}
             <div className="absolute -top-10 left-[4%] w-[320px] h-[280px] rounded-full bg-[#7c3aed]/[0.10] blur-[100px]" />
             
