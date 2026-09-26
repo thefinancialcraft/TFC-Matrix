@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, Check, CreditCard, RefreshCw, Search } from 'lucide-react'
 
 const COLUMNS = [
-  'proposal_no', 'payment_date', 'policy_holder_name', 'policy_status', 'insurance_company', 'plan_name',
-  'tenure', 'premium', 'net_premium', 'discount_offer', 'updated_premium', 'employee_name',
+  'proposal_no', 'payment_date', 'policy_holder_name', 'employee_name', 'policy_status', 'insurance_company', 'plan_name',
+  'tenure', 'premium', 'net_premium', 'discount_offer', 'updated_premium',
   'team', 'proposal_status', 'relationship_manager', 'booking_id', 'number_of_members', 'pincode', 'city',
   'district', 'state', 'country', 'payment_month', 'effective_date', 'next_renewal_date',
   'month', 'policy_type', 'health_checkup', 'extra_bonus', 'discount_offer_type',
@@ -36,7 +36,7 @@ const getInitialDates = () => {
   return { startDate: formatDateInput(firstDay), endDate: formatDateInput(today) }
 }
 
-const formatHeader = (column: string) => column
+const formatHeader = (column: string) => column === 'employee_name' ? 'Agent Name' : column
   .split('_')
   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
   .join(' ')
