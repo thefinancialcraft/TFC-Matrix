@@ -4,6 +4,17 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { Users, Target, TrendingUp, AlertCircle, Trophy, Calendar, User, Settings } from 'lucide-react'
 
+const TEAM_STATUS_COLUMNS = [
+  { label: 'Issued', amountKey: 'issued', nopKey: 'issuedNop', color: '#00B050', background: '#00B05020' },
+  { label: 'Pending', amountKey: 'pending', nopKey: 'pendingNop', color: '#FFFF00', background: '#FFFF0020' },
+  { label: 'Requirement', amountKey: 'requirement', nopKey: 'requirementNop', color: '#FFA500', background: '#FFA50020' },
+  { label: 'Counter', amountKey: 'counter', nopKey: 'counterNop', color: '#E2E8F0', background: '#80008020' },
+  { label: 'Declined', amountKey: 'declined', nopKey: 'declinedNop', color: '#FF0000', background: '#FF000020' },
+  { label: 'Mismatched', amountKey: 'mismatched', nopKey: 'mismatchedNop', color: '#5B9BD5', background: '#5B9BD520' }
+] as const
+
+const TEAM_RECORD_COLUMN_COUNT = 24 + TEAM_STATUS_COLUMNS.length
+
 const formatDate = (dateString: string) => {
   if (!dateString || dateString === 'N/A') return 'N/A'
   try {
@@ -662,6 +673,9 @@ export default function TeamsPage() {
                 <th className="pb-3 pr-4 text-[13px] font-poppins font-medium text-white/50 text-center">NOP</th>
                 <th className="pb-3 pr-4 text-[13px] font-poppins font-medium text-white/50 text-center">Score</th>
                 <th className="pb-3 pr-4 text-[13px] font-poppins font-medium text-white/50 text-center">Ach%</th>
+                {TEAM_STATUS_COLUMNS.map((column) => (
+                  <th key={column.amountKey} className="min-w-[96px] border-l border-white/10 px-3 pb-3 text-center font-poppins text-[13px] font-semibold" style={{ backgroundColor: column.background, color: column.color }}>{column.label}</th>
+                ))}
                 <th className="pb-3 pr-4 text-[13px] font-poppins font-medium text-white/50 text-center">Pay Date</th>
                 <th className="pb-3 pr-4 text-[13px] font-poppins font-medium text-white/50 text-center">Days</th>
                 <th className="pb-3 pr-4 text-[13px] font-poppins font-medium text-white/50 text-center">Salary</th>
@@ -711,11 +725,14 @@ export default function TeamsPage() {
                     <td className="py-3.5 pr-4"><div className="h-6 w-12 kpi-skeleton rounded mx-auto" /></td>
                     <td className="py-3.5 pr-4"><div className="h-6 w-12 kpi-skeleton rounded mx-auto" /></td>
                     <td className="py-3.5"><div className="h-6 w-12 kpi-skeleton rounded mx-auto" /></td>
+                    {TEAM_STATUS_COLUMNS.map((column) => (
+                      <td key={column.amountKey} className="border-l border-white/10 px-3 py-3.5" style={{ backgroundColor: column.background }}><div className="h-6 w-16 kpi-skeleton rounded mx-auto" /></td>
+                    ))}
                   </tr>
                 ))
               ) : filteredTeamLeadersList.length === 0 ? (
                 <tr>
-                  <td colSpan={24} className="py-10 text-center text-sm text-[#64748B] font-poppins">
+                  <td colSpan={TEAM_RECORD_COLUMN_COUNT} className="py-10 text-center text-sm text-[#64748B] font-poppins">
                     No teams found
                   </td>
                 </tr>
@@ -755,6 +772,18 @@ export default function TeamsPage() {
                           {Number(team.percent || 0).toFixed(1)}%
                         </span>
                       </td>
+                      {TEAM_STATUS_COLUMNS.map((column) => {
+                        const amount = Number(team[column.amountKey] || 0)
+                        const nop = Number(team[column.nopKey] || 0)
+                        return (
+                          <td key={column.amountKey} className="min-w-[96px] border-l border-white/10 px-3 py-3.5 text-center" style={{ backgroundColor: column.background }}>
+                            <div className="flex flex-col items-center gap-0.5 font-roboto" style={{ color: column.color }}>
+                              <span className="text-[13px] font-semibold">₹{amount.toLocaleString('en-IN')}</span>
+                              <span className="text-[10px] font-medium">NOP - {nop.toLocaleString('en-IN')}</span>
+                            </div>
+                          </td>
+                        )
+                      })}
                       <td className="py-3.5 pr-4 text-center">
                         <span className="font-roboto text-[13px] text-white/60">{formatDate(team.payDate)}</span>
                       </td>

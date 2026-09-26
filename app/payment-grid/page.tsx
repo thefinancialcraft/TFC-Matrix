@@ -4,14 +4,24 @@ import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, CreditCard, RefreshCw, Search } from 'lucide-react'
 
 const COLUMNS = [
-  'proposal_no', 'payment_date', 'policy_holder_name', 'insurance_company', 'plan_name',
+  'proposal_no', 'payment_date', 'policy_holder_name', 'policy_status', 'insurance_company', 'plan_name',
   'tenure', 'premium', 'net_premium', 'discount_offer', 'updated_premium', 'employee_name',
-  'team', 'relationship_manager', 'booking_id', 'number_of_members', 'pincode', 'city',
+  'team', 'proposal_status', 'relationship_manager', 'booking_id', 'number_of_members', 'pincode', 'city',
   'district', 'state', 'country', 'payment_month', 'effective_date', 'next_renewal_date',
   'month', 'policy_type', 'health_checkup', 'extra_bonus', 'discount_offer_type',
   'previous_company', 'business_type', 'assistant_team', 'agent_code', 'grade', 'lead_source',
   'payment_proof', 'created_at', 'sync'
 ]
+
+const POLICY_STATUS_STYLES: Record<string, { backgroundColor: string; borderColor: string; color: string }> = {
+  counter: { backgroundColor: '#80008026', borderColor: '#800080', color: '#800080' },
+  declined: { backgroundColor: '#FF000026', borderColor: '#FF0000', color: '#FF0000' },
+  issued: { backgroundColor: '#00B05026', borderColor: '#00B050', color: '#00B050' },
+  pending: { backgroundColor: '#FFFF0026', borderColor: '#FFFF00', color: '#FFFF00' },
+  requirement: { backgroundColor: '#FFA50026', borderColor: '#FFA500', color: '#FFA500' },
+  mismatched: { backgroundColor: '#5B9BD526', borderColor: '#5B9BD5', color: '#5B9BD5' }
+}
+const POLICY_STATUS_FILTERS = Object.keys(POLICY_STATUS_STYLES)
 
 const formatDateInput = (date: Date) => {
   const year = date.getFullYear()
@@ -55,6 +65,7 @@ export default function PaymentGridPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [teamFilter, setTeamFilter] = useState('')
   const [agentFilter, setAgentFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -135,10 +146,11 @@ export default function PaymentGridPage() {
     return rows.filter((row) => {
       const matchesTeam = !teamFilter || row.team === teamFilter
       const matchesAgent = !agentFilter || row.employee_name === agentFilter
+      const matchesStatus = !statusFilter || String(row.policy_status || '').trim().toLowerCase() === statusFilter
       const matchesSearch = !query || COLUMNS.some((column) => displayValue(column, row[column]).toLowerCase().includes(query))
-      return matchesTeam && matchesAgent && matchesSearch
+      return matchesTeam && matchesAgent && matchesStatus && matchesSearch
     })
-  }, [rows, searchQuery, teamFilter, agentFilter])
+  }, [rows, searchQuery, teamFilter, agentFilter, statusFilter])
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 pb-8 max-w-[1800px] mx-auto">
@@ -185,6 +197,40 @@ export default function PaymentGridPage() {
           </div>
         </div>
 
+        <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by policy status">
+          <span className="mr-1 text-xs text-white/50">Status</span>
+          <button
+            type="button"
+            aria-pressed={!statusFilter}
+            onClick={() => setStatusFilter('')}
+            className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${statusFilter ? 'border-white/10 text-white/55 hover:text-white' : 'border-white/35 bg-white/10 text-white'}`}
+          >
+            All
+          </button>
+          {POLICY_STATUS_FILTERS.map((status) => {
+            const isSelected = statusFilter === status
+            const style = POLICY_STATUS_STYLES[status]
+            return (
+              <button
+                key={status}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => setStatusFilter(isSelected ? '' : status)}
+                className="rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors"
+                style={{
+                  backgroundColor: isSelected ? style.backgroundColor : 'transparent',
+                  borderColor: style.borderColor,
+                  borderWidth: isSelected ? 2 : 1,
+                  color: style.color,
+                  opacity: statusFilter && !isSelected ? 0.65 : 1
+                }}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            )
+          })}
+        </div>
+
         {error ? <div className="mb-4 rounded-lg border border-red-400/20 bg-red-400/5 p-3 text-sm text-red-300">{error}</div> : null}
 
         <div className="overflow-x-auto rounded-lg border border-white/[0.06]">
@@ -201,7 +247,22 @@ export default function PaymentGridPage() {
                 <tr><td colSpan={COLUMNS.length} className="py-12 text-center text-sm text-[#64748B]">{hasLoaded ? 'No payment records found for this range.' : 'No records loaded.'}</td></tr>
               ) : filteredRows.map((row, index) => (
                 <tr key={`${displayValue('booking_id', row.booking_id)}-${index}`} className="border-t border-white/[0.05] hover:bg-white/[0.03]">
-                  {COLUMNS.map((column) => <td key={column} className="px-4 py-3 text-xs text-white/75">{displayValue(column, row[column])}</td>)}
+                  {COLUMNS.map((column) => {
+                    const value = displayValue(column, row[column])
+                    const statusStyle = column === 'policy_status'
+                      ? POLICY_STATUS_STYLES[value.toLowerCase()]
+                      : undefined
+
+                    return (
+                      <td key={column} className="px-4 py-3 text-xs text-white/75">
+                        {statusStyle ? (
+                          <span className="inline-flex rounded-md border border-solid px-2 py-1 text-[10px] font-semibold" style={statusStyle}>
+                            {value}
+                          </span>
+                        ) : value}
+                      </td>
+                    )
+                  })}
                 </tr>
               ))}
             </tbody>

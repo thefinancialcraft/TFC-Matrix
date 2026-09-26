@@ -46,6 +46,15 @@ const formatMMMYY = (monthStr: string) => {
   return `${mmm} 26`
 }
 
+const FINAL_STATUS_ITEMS = [
+  { key: 'issued', label: 'Issued', color: '#34d399' },
+  { key: 'pending', label: 'Pending', color: '#fbbf24' },
+  { key: 'requirement', label: 'Requirement', color: '#38bdf8' },
+  { key: 'counter', label: 'Counter', color: '#a78bfa' },
+  { key: 'declined', label: 'Declined', color: '#fb7185' },
+  { key: 'mismatched', label: 'Mismatched', color: '#f97316' }
+] as const
+
 function CornerBorderBeam({ color, glowKey, delay = 0 }: { color: string; glowKey: string; delay?: number }) {
   const pathD = "M 109 0 L 109 27 A 24 24 0 0 1 85 51 L 0 51"
   return (
@@ -1312,7 +1321,7 @@ export default function Dashboard() {
       </svg>
 
       {/* ============ TOP ROW: 5 TRANSPARENT KPI CARDS ============ */}
-      <section className="pt-0 pb-6 lg:pt-0 lg:pb-8 mb-8 lg:mb-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 xl:gap-4">
+      <section className="pt-0 pb-6 lg:pt-0 lg:pb-8 mb-4 lg:mb-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 xl:gap-4">
         {/* Card 1: Final Premium (#4d1bb5 vibrant) */}
         <div className="relative h-[80px] p-4 pr-5 flex items-center justify-between rounded-br-[24px] overflow-hidden bg-transparent transition-all duration-300 group">
           <CornerBorderBeam color="#a78bfa" glowKey="purple" delay={0} />
@@ -1421,6 +1430,37 @@ export default function Dashboard() {
               No. Of Payments
             </span>
           </div>
+        </div>
+      </section>
+
+      <section aria-label="Final status totals" style={{ marginBottom: 58 }}>
+        <h2 className="mb-3 font-poppins text-sm font-medium text-white/70">Final Status</h2>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6 xl:gap-3">
+          {FINAL_STATUS_ITEMS.map((item) => {
+            const totals = data?.kpis?.statusBreakdown?.[item.key]
+            return (
+              <div key={item.key} className="min-w-0 rounded-md border border-white/10 bg-white/[0.025] p-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                  <h3 className="truncate font-poppins text-xs font-medium text-white/80">{item.label}</h3>
+                </div>
+                <div className="flex items-end justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-roboto text-[10px] text-white/45">Amount</div>
+                    <div className="truncate font-roboto text-sm font-semibold text-white">
+                      ₹{Number(totals?.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="font-roboto text-[10px] text-white/45">NOP</div>
+                    <div className="font-roboto text-sm font-semibold" style={{ color: item.color }}>
+                      {Number(totals?.nop || 0).toLocaleString('en-IN')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </section>
 

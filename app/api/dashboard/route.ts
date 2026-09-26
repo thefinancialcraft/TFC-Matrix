@@ -61,6 +61,12 @@ function cleanData(data: any[]) {
     if (cleaned.nop !== undefined) cleaned.nop = cleanInt(cleaned.nop)
     if (cleaned.discount_count !== undefined) cleaned.discount_count = cleanInt(cleaned.discount_count)
     if (cleaned.last_pay_days !== undefined) cleaned.last_pay_days = cleanInt(cleaned.last_pay_days)
+
+    ;['issued', 'pending', 'requirement', 'counter', 'declined', 'mismatched'].forEach((column) => {
+      if (cleaned[column] !== undefined) cleaned[column] = cleanCurrency(cleaned[column])
+      const nopColumn = `${column}_nop`
+      if (cleaned[nopColumn] !== undefined) cleaned[nopColumn] = cleanInt(cleaned[nopColumn])
+    })
     
     return cleaned
   })
@@ -111,6 +117,18 @@ export async function GET(request: Request) {
       'gross_score': 'Gross score',
       'score': 'Score',
       'just_left': 'Just left',
+      'issued': 'Issued',
+      'issued_nop': 'Issued Nop',
+      'pending': 'Pending',
+      'pending_nop': 'Pen. Nop',
+      'requirement': 'Requirement',
+      'requirement_nop': 'Req. Nop',
+      'counter': 'Counter',
+      'counter_nop': 'Cou. Nop',
+      'declined': 'Declined',
+      'declined_nop': 'Dec. Nop',
+      'mismatched': 'Mismatched',
+      'mismatched_nop': 'Mismatched Nop',
       'achievement': 'Achievement',
       'discount_deliverd': 'Discount Deliverd',
       'discount_count': 'Discount Count',
@@ -218,6 +236,15 @@ export async function GET(request: Request) {
     const totalGross = currentMonthData.reduce((sum: number, row: any) => sum + (row['Gross score'] || 0), 0)
     const totalNop = currentMonthData.reduce((sum: number, row: any) => sum + (row['N.o.p'] || 0), 0)
     const avgAch = totalTarget > 0 ? (totalScore / totalTarget) * 100 : 0
+    const sumStatusColumn = (column: string) => currentMonthData.reduce((sum: number, row: any) => sum + (row[column] || 0), 0)
+    const statusBreakdown = {
+      issued: { amount: sumStatusColumn('Issued'), nop: sumStatusColumn('Issued Nop') },
+      pending: { amount: sumStatusColumn('Pending'), nop: sumStatusColumn('Pen. Nop') },
+      requirement: { amount: sumStatusColumn('Requirement'), nop: sumStatusColumn('Req. Nop') },
+      counter: { amount: sumStatusColumn('Counter'), nop: sumStatusColumn('Cou. Nop') },
+      declined: { amount: sumStatusColumn('Declined'), nop: sumStatusColumn('Dec. Nop') },
+      mismatched: { amount: sumStatusColumn('Mismatched'), nop: sumStatusColumn('Mismatched Nop') }
+    }
     
     // Calculate milestones
     const targetCleared = currentMonthData.filter((row: any) => row['Score'] >= row['Target'] && row['Target'] > 0).length
@@ -280,6 +307,18 @@ export async function GET(request: Request) {
       grossScore: row['Gross score'] || 0,
       score: row['Score'] || 0,
       justLeft: row['Just left'] || 0,
+      issued: row['Issued'] || 0,
+      issuedNop: row['Issued Nop'] || 0,
+      pending: row['Pending'] || 0,
+      pendingNop: row['Pen. Nop'] || 0,
+      requirement: row['Requirement'] || 0,
+      requirementNop: row['Req. Nop'] || 0,
+      counter: row['Counter'] || 0,
+      counterNop: row['Cou. Nop'] || 0,
+      declined: row['Declined'] || 0,
+      declinedNop: row['Dec. Nop'] || 0,
+      mismatched: row['Mismatched'] || 0,
+      mismatchedNop: row['Mismatched Nop'] || 0,
       percent: row['Target'] > 0 ? (row['Score'] / row['Target']) * 100 : 0,
       discountDelivered: row['Discount Deliverd'] || 0,
       discountCount: row['Discount Count'] || 0,
@@ -309,6 +348,18 @@ export async function GET(request: Request) {
           multiYrNop: 0,
           discountDelivered: 0,
           discountCount: 0,
+          issued: 0,
+          issuedNop: 0,
+          pending: 0,
+          pendingNop: 0,
+          requirement: 0,
+          requirementNop: 0,
+          counter: 0,
+          counterNop: 0,
+          declined: 0,
+          declinedNop: 0,
+          mismatched: 0,
+          mismatchedNop: 0,
           payAmt: 0,
           agents: 0,
           zeroScoreAgents: 0,
@@ -333,6 +384,18 @@ export async function GET(request: Request) {
       teamData.multiYrNop += row['Multi Yr Nop'] || 0
       teamData.discountDelivered += row['Discount Deliverd'] || 0
       teamData.discountCount += row['Discount Count'] || 0
+      teamData.issued += row['Issued'] || 0
+      teamData.issuedNop += row['Issued Nop'] || 0
+      teamData.pending += row['Pending'] || 0
+      teamData.pendingNop += row['Pen. Nop'] || 0
+      teamData.requirement += row['Requirement'] || 0
+      teamData.requirementNop += row['Req. Nop'] || 0
+      teamData.counter += row['Counter'] || 0
+      teamData.counterNop += row['Cou. Nop'] || 0
+      teamData.declined += row['Declined'] || 0
+      teamData.declinedNop += row['Dec. Nop'] || 0
+      teamData.mismatched += row['Mismatched'] || 0
+      teamData.mismatchedNop += row['Mismatched Nop'] || 0
       teamData.payAmt += row['Last Payment Amount'] || 0
       teamData.agents += 1
       if (row['Score'] === 0) teamData.zeroScoreAgents += 1
@@ -520,6 +583,7 @@ export async function GET(request: Request) {
         below50k: currentMonthData.reduce((sum: number, row: any) => sum + (row['50 Below Above'] || 0), 0),
         between50k1L: currentMonthData.reduce((sum: number, row: any) => sum + (row['50k Above'] || 0), 0),
         above1L: currentMonthData.reduce((sum: number, row: any) => sum + (row['1lac Above'] || 0), 0),
+        statusBreakdown,
         totalAgents: currentMonthData.length
       },
       milestones: {

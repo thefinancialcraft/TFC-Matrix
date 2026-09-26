@@ -35,14 +35,14 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation Links (Clean Flat List without Categories) */}
-      <nav className="flex h-full md:flex-1 gap-1 px-2 md:px-4 py-1 md:pt-4 md:py-1 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto" aria-label="Main Navigation">
+      <nav className="flex h-full md:flex-1 flex-row md:flex-col gap-1 px-2 md:px-4 py-1 md:pt-4 md:py-1 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto" aria-label="Main Navigation">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href === "/" && pathname === "")
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`nav-menu-link group flex flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-0.5 md:gap-2.5 shrink-0 md:w-full px-2 md:px-3 py-1.5 rounded-xl bg-transparent transition-all duration-300 ease-out ${
+              className={`nav-menu-link group flex flex-1 md:flex-none flex-col md:flex-row items-center justify-center md:justify-start gap-0.5 md:gap-2.5 shrink-0 md:w-full px-2 md:px-3 py-1.5 rounded-xl bg-transparent transition-all duration-300 ease-out ${
                 isActive
                   ? "text-white font-medium"
                   : "text-[#64748B] hover:text-white font-normal"
