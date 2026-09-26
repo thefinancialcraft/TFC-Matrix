@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { CalendarDays, CreditCard, RefreshCw, Search } from 'lucide-react'
+import { CalendarDays, Check, CreditCard, RefreshCw, Search } from 'lucide-react'
 
 const COLUMNS = [
   'proposal_no', 'payment_date', 'policy_holder_name', 'policy_status', 'insurance_company', 'plan_name',
@@ -66,6 +66,7 @@ export default function PaymentGridPage() {
   const [teamFilter, setTeamFilter] = useState('')
   const [agentFilter, setAgentFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [proposalStatusFilters, setProposalStatusFilters] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -141,16 +142,21 @@ export default function PaymentGridPage() {
     rows.map((row) => String(row.employee_name || '')).filter(Boolean)
   )).sort(), [rows])
 
+  const proposalStatuses = useMemo(() => Array.from(new Set(
+    rows.map((row) => String(row.proposal_status || '').trim()).filter(Boolean)
+  )).sort((firstStatus, secondStatus) => firstStatus.localeCompare(secondStatus)), [rows])
+
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
     return rows.filter((row) => {
       const matchesTeam = !teamFilter || row.team === teamFilter
       const matchesAgent = !agentFilter || row.employee_name === agentFilter
       const matchesStatus = !statusFilter || String(row.policy_status || '').trim().toLowerCase() === statusFilter
+      const matchesProposalStatus = proposalStatusFilters.length === 0 || proposalStatusFilters.includes(String(row.proposal_status || '').trim())
       const matchesSearch = !query || COLUMNS.some((column) => displayValue(column, row[column]).toLowerCase().includes(query))
-      return matchesTeam && matchesAgent && matchesStatus && matchesSearch
+      return matchesTeam && matchesAgent && matchesStatus && matchesProposalStatus && matchesSearch
     })
-  }, [rows, searchQuery, teamFilter, agentFilter, statusFilter])
+  }, [rows, searchQuery, teamFilter, agentFilter, statusFilter, proposalStatusFilters])
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 pb-8 max-w-[1800px] mx-auto">
@@ -229,6 +235,40 @@ export default function PaymentGridPage() {
               </button>
             )
           })}
+          <details className="relative ml-auto">
+            <summary className="cursor-pointer list-none px-3 py-1.5 text-[11px] font-medium text-white/80 hover:text-white">
+              Proposal Status{proposalStatusFilters.length ? ` (${proposalStatusFilters.length})` : ''} <span aria-hidden="true">▾</span>
+            </summary>
+            <div className="absolute right-0 z-20 mt-2 max-h-64 min-w-60 overflow-y-auto rounded-xl border border-white/10 bg-[#0A0E17] p-2 shadow-xl">
+              {proposalStatuses.length ? proposalStatuses.map((status) => (
+                <label key={status} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs text-white/80 hover:bg-white/5">
+                  <input
+                    type="checkbox"
+                    checked={proposalStatusFilters.includes(status)}
+                    onChange={(event) => setProposalStatusFilters((selected) => (
+                      event.target.checked
+                        ? [...selected, status]
+                        : selected.filter((selectedStatus) => selectedStatus !== status)
+                    ))}
+                    className="peer sr-only"
+                  />
+                  <span className="mr-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-white/30 text-[#071018] transition-colors peer-checked:border-cyan-400 peer-checked:bg-cyan-400 peer-focus-visible:ring-2 peer-focus-visible:ring-cyan-300/60">
+                    {proposalStatusFilters.includes(status) && <Check size={12} strokeWidth={3} />}
+                  </span>
+                  <span>{status}</span>
+                </label>
+              )) : <p className="px-2 py-1.5 text-xs text-white/50">No proposal statuses available</p>}
+              {proposalStatusFilters.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setProposalStatusFilters([])}
+                  className="mt-1 w-full border-t border-white/10 px-2 pt-2 text-left text-xs text-cyan-300 hover:text-cyan-200"
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
+          </details>
         </div>
 
         {error ? <div className="mb-4 rounded-lg border border-red-400/20 bg-red-400/5 p-3 text-sm text-red-300">{error}</div> : null}
