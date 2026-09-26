@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarDays, Check, CreditCard, RefreshCw, Search } from 'lucide-react'
 
 const COLUMNS = [
@@ -70,9 +70,10 @@ export default function PaymentGridPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [hasLoaded, setHasLoaded] = useState(false)
+  const hasAutoLoaded = useRef(false)
   const cacheKey = `tfc-payment-grid:${startDate}:${endDate}`
 
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     if (!startDate || !endDate) {
       setError('Please select both payment dates.')
       return
@@ -111,7 +112,7 @@ export default function PaymentGridPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [cacheKey, endDate, startDate])
 
   useEffect(() => {
     try {
@@ -133,6 +134,12 @@ export default function PaymentGridPage() {
       setHasLoaded(false)
     }
   }, [cacheKey])
+
+  useEffect(() => {
+    if (hasAutoLoaded.current) return
+    hasAutoLoaded.current = true
+    void fetchPayments()
+  }, [fetchPayments])
 
   const teamLeaders = useMemo(() => Array.from(new Set(
     rows.map((row) => String(row.team || '')).filter(Boolean)
