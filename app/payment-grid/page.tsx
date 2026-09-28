@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarDays, Check, CreditCard, RefreshCw, Search } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, CalendarDays, Check, RefreshCw, Search } from 'lucide-react'
 
 const COLUMNS = [
   'proposal_no', 'payment_date', 'policy_holder_name', 'employee_name', 'policy_status', 'insurance_company', 'plan_name',
@@ -67,6 +67,8 @@ export default function PaymentGridPage() {
   const [agentFilter, setAgentFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [proposalStatusFilters, setProposalStatusFilters] = useState<string[]>([])
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -164,6 +166,34 @@ export default function PaymentGridPage() {
       return matchesTeam && matchesAgent && matchesStatus && matchesProposalStatus && matchesSearch
     })
   }, [rows, searchQuery, teamFilter, agentFilter, statusFilter, proposalStatusFilters])
+
+  const sortedRows = useMemo(() => {
+    if (!sortColumn) return filteredRows
+
+    const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+    return [...filteredRows].sort((firstRow, secondRow) => {
+      const firstValue = firstRow[sortColumn]
+      const secondValue = secondRow[sortColumn]
+      const firstIsEmpty = firstValue === null || firstValue === undefined || firstValue === ''
+      const secondIsEmpty = secondValue === null || secondValue === undefined || secondValue === ''
+      if (firstIsEmpty || secondIsEmpty) {
+        if (firstIsEmpty && secondIsEmpty) return 0
+        return firstIsEmpty ? 1 : -1
+      }
+
+      const comparison = collator.compare(String(firstValue), String(secondValue))
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+  }, [filteredRows, sortColumn, sortDirection])
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection((direction) => direction === 'asc' ? 'desc' : 'asc')
+      return
+    }
+    setSortColumn(column)
+    setSortDirection('asc')
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 pb-8 max-w-[1800px] mx-auto">
@@ -284,15 +314,32 @@ export default function PaymentGridPage() {
           <table className="min-w-[3000px] w-full text-left whitespace-nowrap">
             <thead className="bg-white/[0.04]">
               <tr>
-                {COLUMNS.map((column) => <th key={column} className="px-4 py-3 text-[11px] font-semibold text-white/60">{formatHeader(column)}</th>)}
+                {COLUMNS.map((column) => {
+                  const isSorted = sortColumn === column
+                  const SortIcon = !isSorted ? ArrowUpDown : sortDirection === 'asc' ? ArrowUp : ArrowDown
+                  return (
+                    <th key={column} aria-sort={isSorted ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-4 py-3 text-[11px] font-semibold text-white/60">
+                      <button
+                        type="button"
+                        onClick={() => handleSort(column)}
+                        aria-label={`Sort by ${formatHeader(column)} ${isSorted && sortDirection === 'asc' ? 'descending' : 'ascending'}`}
+                        title={`Sort ${formatHeader(column)} ${isSorted && sortDirection === 'asc' ? 'Z to A' : 'A to Z'}`}
+                        className="inline-flex items-center gap-1.5 text-left hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70"
+                      >
+                        {formatHeader(column)}
+                        <SortIcon size={12} aria-hidden="true" className={isSorted ? 'text-cyan-300' : 'text-white/30'} />
+                      </button>
+                    </th>
+                  )
+                })}
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr><td colSpan={COLUMNS.length} className="py-12 text-center text-sm text-[#64748B]">Loading payment responses...</td></tr>
-              ) : filteredRows.length === 0 ? (
+              ) : sortedRows.length === 0 ? (
                 <tr><td colSpan={COLUMNS.length} className="py-12 text-center text-sm text-[#64748B]">{hasLoaded ? 'No payment records found for this range.' : 'No records loaded.'}</td></tr>
-              ) : filteredRows.map((row, index) => (
+              ) : sortedRows.map((row, index) => (
                 <tr key={`${displayValue('booking_id', row.booking_id)}-${index}`} className="border-t border-white/[0.05] hover:bg-white/[0.03]">
                   {COLUMNS.map((column) => {
                     const value = displayValue(column, row[column])
