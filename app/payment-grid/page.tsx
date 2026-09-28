@@ -22,6 +22,7 @@ const POLICY_STATUS_STYLES: Record<string, { backgroundColor: string; borderColo
   mismatched: { backgroundColor: '#5B9BD526', borderColor: '#5B9BD5', color: '#5B9BD5' }
 }
 const POLICY_STATUS_FILTERS = Object.keys(POLICY_STATUS_STYLES)
+const DATE_COLUMNS = new Set(['payment_date', 'effective_date', 'next_renewal_date', 'created_at'])
 
 const formatDateInput = (date: Date) => {
   const year = date.getFullYear()
@@ -55,6 +56,15 @@ const displayValue = (column: string, value: unknown) => {
     }
   }
   return String(value)
+}
+
+const sortableDateValue = (value: unknown) => {
+  const rawValue = String(value).trim()
+  const dayFirstDate = rawValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  const timestamp = dayFirstDate
+    ? new Date(Number(dayFirstDate[3]), Number(dayFirstDate[2]) - 1, Number(dayFirstDate[1])).getTime()
+    : Date.parse(rawValue)
+  return Number.isNaN(timestamp) ? null : timestamp
 }
 
 export default function PaymentGridPage() {
@@ -181,7 +191,11 @@ export default function PaymentGridPage() {
         return firstIsEmpty ? 1 : -1
       }
 
-      const comparison = collator.compare(String(firstValue), String(secondValue))
+      const firstDate = DATE_COLUMNS.has(sortColumn) ? sortableDateValue(firstValue) : null
+      const secondDate = DATE_COLUMNS.has(sortColumn) ? sortableDateValue(secondValue) : null
+      const comparison = firstDate !== null && secondDate !== null
+        ? firstDate - secondDate
+        : collator.compare(String(firstValue), String(secondValue))
       return sortDirection === 'asc' ? comparison : -comparison
     })
   }, [filteredRows, sortColumn, sortDirection])
@@ -206,11 +220,11 @@ export default function PaymentGridPage() {
         <div className="flex flex-wrap items-end gap-3">
           <label className="text-xs text-[#94A3B8]">
             <span className="mb-1 flex items-center gap-1"><CalendarDays size={13} /> From</span>
-            <input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none" />
+            <input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none" style={{ colorScheme: 'dark' }} />
           </label>
           <label className="text-xs text-[#94A3B8]">
             <span className="mb-1 flex items-center gap-1"><CalendarDays size={13} /> To</span>
-            <input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none" />
+            <input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none" style={{ colorScheme: 'dark' }} />
           </label>
           <button onClick={fetchPayments} disabled={isLoading} className="inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-xs font-semibold text-white hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60">
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
@@ -318,13 +332,13 @@ export default function PaymentGridPage() {
                   const isSorted = sortColumn === column
                   const SortIcon = !isSorted ? ArrowUpDown : sortDirection === 'asc' ? ArrowUp : ArrowDown
                   return (
-                    <th key={column} aria-sort={isSorted ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-4 py-3 text-[11px] font-semibold text-white/60">
+                    <th key={column} aria-sort={isSorted ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-[11px] font-semibold text-white/60">
                       <button
                         type="button"
                         onClick={() => handleSort(column)}
                         aria-label={`Sort by ${formatHeader(column)} ${isSorted && sortDirection === 'asc' ? 'descending' : 'ascending'}`}
                         title={`Sort ${formatHeader(column)} ${isSorted && sortDirection === 'asc' ? 'Z to A' : 'A to Z'}`}
-                        className="inline-flex items-center gap-1.5 text-left hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70"
+                        className="flex w-full items-center gap-1.5 px-4 py-3 text-left hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-400/70"
                       >
                         {formatHeader(column)}
                         <SortIcon size={12} aria-hidden="true" className={isSorted ? 'text-cyan-300' : 'text-white/30'} />
