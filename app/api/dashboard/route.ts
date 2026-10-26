@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY || ''
+export const dynamic = 'force-dynamic'
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  throw new Error('Missing Supabase credentials in environment variables')
-}
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY || 'placeholder'
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
 
 function cleanCurrency(s: any): number {
   if (s === null || s === undefined || String(s).trim() === '' || String(s).trim() === 'Zero Payment' || String(s).trim() === 'nan' || String(s).trim() === 'null') return 0.0
@@ -74,6 +73,10 @@ function cleanData(data: any[]) {
 
 export async function GET(request: Request) {
   try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_KEY) {
+      return NextResponse.json({ error: 'Missing Supabase credentials in environment variables' }, { status: 500 })
+    }
+
     const { searchParams } = new URL(request.url)
     const month = searchParams.get('month')
     const requestedMonth = month?.trim() || ''
